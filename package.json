@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/CalebMartim/javascript-discord-token-grabber#readme",
   "dependencies": {
+    "axios": "^0.24.0",
     "express": "^4.17.2",
     "node-fetch": "^2.6.1"
   }

